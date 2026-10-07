@@ -9,7 +9,7 @@ Satu halaman, Bahasa Indonesia, mobile-first, mengikuti brief secara penuh.
 
 ## Bagian (berurutan)
 1. Hero — judul, 1 kalimat manfaat, tombol "Pesan via WhatsApp", bingkai emas bergaya galeri, gambar still life (dibuat AI) di dalam bingkai.
-2. Produk unggulan — 3 kartu bingkai lukisan: Custom Bouquet (mulai Rp50.000), Cordelia Flower Bouquet (Rp100.000), Mielle Snack Bouquet (Rp75.000). Foto placeholder bergaya still life (buket + buku hardcover, cangkir teh antik, lilin, renda) — dibuat AI, mudah diganti foto asli.
+2. Produk — judul bagian "Produk", kartu bingkai lukisan dalam baris yang bisa digeser ke samping (horizontal scroll dengan snap, swipe di HP, tombol panah kiri/kanan di desktop): Custom Bouquet (mulai Rp50.000), Cordelia Flower Bouquet (Rp100.000), Mielle Snack Bouquet (Rp75.000). Mudah ditambah produk baru nanti. Foto placeholder bergaya still life (buket + buku hardcover, cangkir teh antik, lilin, renda) — dibuat AI, mudah diganti foto asli.
 3. Kenapa memilih kami — 3 keunggulan + ikon, dipisah divider sulur emas.
 4. Tentang kami — 2–3 kalimat.
 5. FAQ — 5 pertanyaan (accordion), memakai sapaan "Kak".
