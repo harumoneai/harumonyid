@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const WA_NUMBER = "628xxxxx"; // ganti dengan nomor asli
+const WA_NUMBER = "6285773552946"; // ganti dengan nomor asli
 const waLink = (text: string) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
 
 const products = [
@@ -206,7 +206,7 @@ function Index() {
         <p className="font-caps text-2xl tracking-widest text-gold">Harumony<span className="text-lilac">.id</span></p>
         <Ornament />
         <div className="mt-6 flex flex-col items-center gap-3 text-sm text-cream/80 md:flex-row md:justify-center md:gap-8">
-          <a href={waLink("Halo Harumony.id")} className="flex items-center gap-2 hover:text-gold"><Phone className="h-4 w-4 text-gold" /> 08xxxxx</a>
+          <a href={waLink("Halo Harumony.id")} className="flex items-center gap-2 hover:text-gold"><Phone className="h-4 w-4 text-gold" /> 085773552946</a>
           <a href="https://instagram.com/harumony.id" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-gold"><Instagram className="h-4 w-4 text-gold" /> @Harumony.id</a>
           <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> Pondok Ungu Permai, Babelan, Bekasi</span>
         </div>
