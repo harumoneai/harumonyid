@@ -34,7 +34,7 @@ const QUICK_SUGGESTIONS = [
 const INITIAL_GREETING: ChatMessage = {
   id: "greeting",
   role: "model",
-  text: "Halo Kak! 🌸 Selamat datang di Harumony.id. Saya asisten virtual toko florist Babelan. Ada yang bisa saya bantu seputar rekomendasi buket bunga, cek daftar harga, atau syarat pemesanan?",
+  text: "Halo Kak! 🌸 Selamat datang di Harumony.id. Saya Harumony Concierge, asisten virtual toko florist Babelan. Ada yang bisa saya bantu seputar rekomendasi buket bunga, cek daftar harga, atau syarat pemesanan?",
   timestamp: Date.now(),
 };
 
@@ -182,7 +182,9 @@ export function ChatWidget() {
 
     await streamGeminiChat({
       messages: chatPayload,
-      systemInstruction: currentSys || "Kamu asisten resmi florist Harumony.id di Babelan, Bekasi.",
+      systemInstruction:
+        currentSys ||
+        "Kamu adalah Harumony Concierge, asisten virtual resmi florist Harumony.id di Babelan, Bekasi.",
       abortSignal: abortController.signal,
       onChunk: (_delta, accumulated) => {
         setMessages((prev) =>
