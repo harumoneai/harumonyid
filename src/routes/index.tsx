@@ -213,7 +213,7 @@ function Index() {
     if (!dateStr || !timeStr) return false;
     const [y, m, d] = dateStr.split("-").map(Number);
     const [h, min] = timeStr.split(":").map(Number);
-    const targetDate = new Date(y, m - 1, d, h || 0, min || 0, 0);
+    const targetDate = new Date(y ?? 0, (m ?? 1) - 1, d ?? 1, h || 0, min || 0, 0);
     const minRequired = new Date(Date.now() + 24 * 60 * 60 * 1000);
     return targetDate.getTime() >= minRequired.getTime() - 60000;
   };
@@ -352,7 +352,7 @@ function Index() {
 
     // Validasi hari kerja: minimal H+1 hari kerja dan tidak boleh akhir pekan
     const [y, m, d] = tanggalPengambilan.split("-").map(Number);
-    const selectedDate = new Date(y, m - 1, d);
+    const selectedDate = new Date(y ?? 0, (m ?? 1) - 1, d ?? 1);
     const dayOfWeek = selectedDate.getDay();
 
     if (tanggalPengambilan < minWorkingDateStr) {
@@ -1041,8 +1041,7 @@ Mohon segera diproses ya kak, terima kasih! ✨`;
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-emerald-400 bg-emerald-950/60 text-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.3)]">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
-              <p className="font-caps text-xs tracking-[0.25em] text-lilac">Pesanan Terkonfirmasi</p>
-              <h3 className="font-display text-2xl md:text-3xl text-cream mt-1">Alhamdulillah, Pesanan Berhasil!</h3>
+              <h3 className="font-display text-2xl md:text-3xl text-cream mt-1">Pesanan Terkonfirmasi</h3>
               <p className="mt-2 text-xs text-cream/80 font-light leading-relaxed">
                 Data pesanan Anda telah resmi tersimpan di database <strong className="text-gold font-medium">Harumony.id</strong>.
               </p>
