@@ -241,12 +241,11 @@ export const DEFAULT_STORE_FAQS: DefaultFaqRule[] = [
   {
     id: "rose_price",
     triggers: [
-      "estimasi buket mawar",
-      "harga buket mawar",
-      "mawar merah",
-      "buket mawar merah",
-      "berapa buket mawar",
-      "harga mawar",
+      "berapa estimasi buket mawar",
+      "berapa estimasi buket mawar merah",
+      "pricelist buket mawar",
+      "daftar harga buket mawar",
+      "harga buket mawar merah",
     ],
     reply: `Untuk estimasi buket mawar merah di Harumony.id:
 • **Mini (S)** (1–3 tangkai): mulai dari **Rp50.000 – Rp75.000**
@@ -285,7 +284,7 @@ Workshop kami buka Senin – Jumat (09.00 – 18.00 WIB) dan libur di akhir peka
       "dimana toko",
       "bisa kirim kemana",
       "bisa kirim ke mana",
-      "ongkir",
+      "area jangkauan pengiriman",
     ],
     reply: `Workshop Harumony.id berlokasi di **Babelan, Kabupaten Bekasi** 📍.
 
@@ -297,14 +296,11 @@ Untuk titik lokasi maps workshop atau cek estimasi ongkos kirim, silakan hubungi
   {
     id: "snack_and_doll",
     triggers: [
-      "custom buket snack",
-      "snack dan boneka",
-      "buket snack",
-      "buket boneka",
-      "bisa snack",
-      "bisa boneka",
-      "buket wisuda",
-      "bisa custom",
+      "apakah ada buket snack",
+      "apakah melayani buket snack",
+      "apakah ada buket boneka",
+      "custom buket snack dan boneka",
+      "bisa buket snack dan boneka",
     ],
     reply: `Tentu bisa banget Kak! 🎉 Kami melayani custom buket snack favorit, buket boneka (teddy bear, wisuda), buket uang, maupun kombinasi bunga + snack.
 
@@ -361,8 +357,9 @@ Pesan yang masuk di luar jam kerja atau akhir pekan akan kami balas dengan senan
 ];
 
 /**
- * Aturan kombinasi intent cerdas:
+ * Aturan kombinasi intent cerdas khusus info operasional toko:
  * Memeriksa keberadaan kata kunci dari grup A DAN grup B tanpa terikat urutan kata.
+ * (Aturan produk/harga buket dilepas agar selalu ditangani secara dinamis & akurat oleh AI).
  */
 interface IntentCombinationRule {
   id: string;
@@ -449,7 +446,6 @@ const INTENT_COMBINATION_RULES: IntentCombinationRule[] = [
       "ke mana",
       "kemana",
       "bisa",
-      "berapa",
       "bekasi",
       "jakarta",
       "ojol",
@@ -457,52 +453,6 @@ const INTENT_COMBINATION_RULES: IntentCombinationRule[] = [
       "area",
     ],
     reply: DEFAULT_STORE_FAQS.find((f) => f.id === "workshop_location")!.reply,
-  },
-  {
-    id: "snack_and_doll_combo",
-    anyGroupA: [
-      "snack",
-      "makanan",
-      "jajan",
-      "jajanan",
-      "coklat",
-      "silverqueen",
-      "boneka",
-      "teddy",
-      "bear",
-      "wisuda",
-      "uang",
-      "money",
-      "beng beng",
-      "pocky",
-    ],
-    anyGroupB: [
-      "buket",
-      "custom",
-      "rangkai",
-      "bisa",
-      "bikin",
-      "buat",
-      "ada",
-      "jual",
-      "mau",
-    ],
-    reply: DEFAULT_STORE_FAQS.find((f) => f.id === "snack_and_doll")!.reply,
-  },
-  {
-    id: "rose_price_combo",
-    anyGroupA: ["mawar", "rose"],
-    anyGroupB: ["harga", "berapa", "estimasi", "biaya", "pricelist", "range"],
-    excludeWords: [
-      "boneka",
-      "snack",
-      "emas",
-      "uang",
-      "silverqueen",
-      "campur",
-      "kombinasi",
-    ],
-    reply: DEFAULT_STORE_FAQS.find((f) => f.id === "rose_price")!.reply,
   },
   {
     id: "how_to_order_combo",
@@ -557,13 +507,71 @@ const STOP_WORDS = new Set([
 ]);
 
 /**
+ * Menentukan apakah sebuah pertanyaan WAJIB diteruskan langsung ke Gemini AI (bypass FAQ & cache instan).
+ * Kondisi bypass:
+ * 1. Mengandung angka / kuantitas digit (misal: "6 beng beng", "10 mawar", "3 hari", "50rb")
+ * 2. Mengandung kata bilangan bahasa Indonesia (satu, dua, tiga, lusin, tangkai, dst.)
+ * 3. Mengandung permintaan estimasi / perhitungan spesifik ("estimasi", "hitung", "total", "rincian", "kalkulasi")
+ * 4. Mengandung kata kombinasi / modifikasi / request ("kombinasi", "campur", "mix", "tambah", "plus", "dengan", "pake", "pakai", "bawa sendiri", "warna", "request")
+ * 5. Kalimat kondisional atau kalimat majemuk ("kalau", "kalo", "misal", "bagaimana jika", dsb.)
+ * 6. Kalimat percakapan panjang (> 6 kata) yang mengindikasikan percakapan dinamis dan bukan FAQ pendek.
+ */
+export function shouldBypassFaq(rawQuery: string): boolean {
+  if (!rawQuery) return false;
+  const lower = rawQuery.toLowerCase().trim();
+
+  // 1. Cek angka digit (misal: 6, 10, 15, 50000, 50k, 50rb)
+  if (/\d+/.test(lower)) {
+    return true;
+  }
+
+  // 2. Cek kata bilangan teks Indonesia atau satuan kuantitas
+  const numberWords = /\b(satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan|sepuluh|sebelas|lusin|kodi|tangkai|pcs|buah|biji|batang|lembar)\b/i;
+  if (numberWords.test(lower)) {
+    return true;
+  }
+
+  // 3. Cek kata hitungan / estimasi spesifik
+  const calculationWords = /\b(estimasi|hitung|hitungin|total|totalnya|kalkulasi|rincian|kira kira berapa|kisaran)\b/i;
+  if (calculationWords.test(lower)) {
+    return true;
+  }
+
+  // 4. Cek kombinasi / kustomisasi spesifik
+  const customWords = /\b(kombinasi|campur|mix|tambah|plus|dengan|dgn|pake|pakai|bawa sendiri|request|warna|nuansa|tema|pita|kertas|wrapping)\b/i;
+  if (customWords.test(lower)) {
+    return true;
+  }
+
+  // 5. Cek kondisi / hipotesis
+  const conditionalWords = /\b(kalau|kalo|kl|misal|misalkan|seumpama|bagaimana kalau|gimana kalau|gimana kl|seandainya)\b/i;
+  if (conditionalWords.test(lower)) {
+    return true;
+  }
+
+  // 6. Kalimat panjang (> 6 kata) yang mengindikasikan pertanyaan dinamis
+  const words = lower.split(/\s+/).filter((w) => w.length > 0);
+  if (words.length > 6) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Mencocokkan pertanyaan pengguna ke FAQ Toko (built-in atau dari Google Sheets).
- * Memiliki 3 lapis pencocokan:
- * 1. Pemicu langsung (Exact Trigger Substring)
- * 2. Kombinasi intent cerdas (Multi-Keyword Overlap)
- * 3. Pencocokan token dinamis dari Google Sheets FAQ
+ * Memiliki 3 lapis pencocokan yang dilindungi oleh Smart Bypass:
+ * 0. Smart Bypass: Pertanyaan dengan detail kuantitas, kalkulasi, atau custom langsung ke AI
+ * 1. Pemicu langsung (Exact Trigger Match & Strict Substring)
+ * 2. Kombinasi intent cerdas info operasional toko
+ * 3. Pencocokan token presisi dari Google Sheets FAQ (Dua arah Precision & Recall)
  */
 export function findFaqAnswer(rawQuery: string, customFaqs?: FaqItem[]): string | null {
+  // 0. Cek Smart Bypass: Jika pertanyaan memiliki detail angka/kalkulasi/kustom, jangan cegat!
+  if (shouldBypassFaq(rawQuery)) {
+    return null;
+  }
+
   const normQuery = normalizeQuery(rawQuery);
   if (!normQuery || normQuery.length < 3) return null;
 
@@ -571,13 +579,18 @@ export function findFaqAnswer(rawQuery: string, customFaqs?: FaqItem[]): string 
   for (const rule of DEFAULT_STORE_FAQS) {
     for (const trigger of rule.triggers) {
       const normTrigger = normalizeQuery(trigger);
-      if (normQuery === normTrigger || normQuery.includes(normTrigger)) {
+      // Cocok persis
+      if (normQuery === normTrigger) {
+        return rule.reply;
+      }
+      // Substring match hanya jika query tidak jauh lebih panjang dari trigger (hindari memotong kalimat kompleks)
+      if (normQuery.includes(normTrigger) && normQuery.length <= normTrigger.length + 12) {
         return rule.reply;
       }
     }
   }
 
-  // 2. Cek kombinasi intent cerdas (Kombinasi kata acak/bahasa gaul)
+  // 2. Cek kombinasi intent cerdas info operasional toko
   for (const combo of INTENT_COMBINATION_RULES) {
     if (combo.excludeWords?.some((word) => normQuery.includes(word))) {
       continue;
@@ -589,7 +602,7 @@ export function findFaqAnswer(rawQuery: string, customFaqs?: FaqItem[]): string 
     }
   }
 
-  // 3. Cek custom FAQs dari Google Sheets
+  // 3. Cek custom FAQs dari Google Sheets dengan threshold dua arah
   if (customFaqs && customFaqs.length > 0) {
     const queryTokens = new Set(
       normQuery.split(" ").filter((w) => w.length > 2 && !STOP_WORDS.has(w))
@@ -599,17 +612,18 @@ export function findFaqAnswer(rawQuery: string, customFaqs?: FaqItem[]): string 
       if (!faq.pertanyaan || !faq.jawaban) continue;
       const normFaqQ = normalizeQuery(faq.pertanyaan);
 
-      // Exact match atau substring match
-      if (normQuery === normFaqQ || normQuery.includes(normFaqQ) || normFaqQ.includes(normQuery)) {
+      // Exact match
+      if (normQuery === normFaqQ) {
         return faq.jawaban;
       }
 
-      // Keyword token overlap
+      // Keyword token overlap dua arah (Precision & Recall)
       const faqTokens = normFaqQ.split(" ").filter((w) => w.length > 2 && !STOP_WORDS.has(w));
-      if (faqTokens.length > 0) {
+      if (faqTokens.length > 0 && queryTokens.size > 0) {
         const matches = faqTokens.filter((t) => queryTokens.has(t)).length;
-        const score = matches / faqTokens.length;
-        if (score >= 0.65) {
+        const recall = matches / faqTokens.length;
+        const precision = matches / queryTokens.size;
+        if (recall >= 0.75 && precision >= 0.6) {
           return faq.jawaban;
         }
       }
@@ -630,6 +644,9 @@ type ChatCacheStore = Record<string, CacheStoreItem>;
  */
 export function getCachedChatResponse(query: string): string | null {
   if (typeof window === "undefined") return null;
+  // Jangan gunakan cache jika pertanyaan memiliki kalkulasi dinamis, angka, atau request kustom
+  if (shouldBypassFaq(query)) return null;
+
   const key = normalizeQuery(query);
   if (!key || key.length < 4) return null;
 
@@ -658,6 +675,11 @@ export function getCachedChatResponse(query: string): string | null {
  */
 export function setCachedChatResponse(query: string, reply: string): void {
   if (typeof window === "undefined" || !reply) return;
+  // Jangan simpan respon jika berupa pesan kendala jaringan/error
+  if (reply.includes("kendala koneksi") || reply.includes("AI Studio")) return;
+  // Jangan simpan pertanyaan dinamis spesifik ke cache agar selalu dihitung segar oleh AI
+  if (shouldBypassFaq(query)) return;
+
   const key = normalizeQuery(query);
   if (!key || key.length < 4) return;
 
@@ -908,7 +930,7 @@ export async function streamGeminiChat({
   const lastUserMsg = userMessages[userMessages.length - 1]?.text || "";
 
   // 1. CEK INSTANT FAQ MATCHING (0 TOKEN)
-  if (enableCache && lastUserMsg) {
+  if (enableCache && lastUserMsg && !shouldBypassFaq(lastUserMsg)) {
     const faqMatch = findFaqAnswer(lastUserMsg, knowledgeBase?.faqs);
     if (faqMatch) {
       onSource?.("faq");

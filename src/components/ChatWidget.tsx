@@ -10,7 +10,6 @@ import {
   Flower2,
   ChevronDown,
   RotateCcw,
-  Zap,
 } from "lucide-react";
 import {
   getKnowledgeBase,
@@ -58,6 +57,8 @@ export function ChatWidget() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Bersihkan cache riwayat lama agar kalkulasi pertanyaan baru selalu segar
+    clearChatResponseCache();
   }, []);
 
   // Inisialisasi knowledge base (Daftar Harga & FAQ dari Google Sheets)
@@ -332,9 +333,9 @@ export function ChatWidget() {
               <div>
                 <h3 className="font-serif text-sm font-semibold tracking-wide text-amber-200 flex items-center gap-1.5">
                   Harumony Concierge
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-400/15 text-amber-300 font-mono font-normal flex items-center gap-1">
-                    <Zap className="w-2.5 h-2.5 text-amber-300" />
-                    AI + Cache
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-sans font-normal flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Online
                   </span>
                 </h3>
                 <p className="text-[11px] text-cream/60 flex items-center gap-1">
@@ -395,18 +396,6 @@ export function ChatWidget() {
                         : "bg-[#231320] border border-white/10 text-cream/90 rounded-bl-xs"
                     }`}
                   >
-                    {!isUser && msg.source && msg.id !== "greeting" && (
-                      <div className="mb-1.5">
-                        <span className="inline-flex items-center gap-1 text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300">
-                          <Zap className="w-2.5 h-2.5 text-amber-300" />
-                          {msg.source === "faq"
-                            ? "FAQ Resmi (0 Token)"
-                            : msg.source === "cache"
-                            ? "Fast Cache (0 Token)"
-                            : "AI Live Grounding"}
-                        </span>
-                      </div>
-                    )}
                     {!msg.text && isStreaming ? (
                       <div className="flex items-center gap-1.5 py-1 text-cream/50">
                         <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-bounce" />
